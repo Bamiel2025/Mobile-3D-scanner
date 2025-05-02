@@ -1,25 +1,71 @@
-# Code Citations
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile 3D Scanner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <style>
+        .camera-container { position: relative; width: 100%; height: 70vh; background: #000; overflow: hidden; }
+        #video { width: 100%; height: 100%; object-fit: cover; }
+        .scanning-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; background: rgba(0, 0, 0, 0.7); }
+        .scanning-grid { position: absolute; width: 80%; height: 60%; border: 2px dashed rgba(255, 255, 255, 0.7); top: 10%; left: 10%; pointer-events: none; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-md mx-auto bg-white min-h-screen">
+        <!-- Header -->
+        <header class="bg-indigo-600 text-white p-4 shadow-md flex items-center justify-between">
+            <h1 class="text-xl font-bold">3D Scanner</h1>
+        </header>
+        
+        <!-- Tabs -->
+        <div class="flex border-b">
+            <button class="tab-btn flex-1 py-3 font-medium text-indigo-600 border-b-2 border-indigo-600" data-tab="scan">Scanner</button>
+            <button class="tab-btn flex-1 py-3 font-medium text-gray-500" data-tab="models">Modèles</button>
+        </div>
 
-## License: MIT
-https://github.com/Uraharadono/ReactTodo/tree/bcd6327e6e1d7365fc57b6da4c336446115e780e/src/common/thumb-builder.js
+        <!-- Scan Tab -->
+        <div id="scan" class="tab-content active p-4">
+            <div class="camera-container mb-4 rounded-lg overflow-hidden">
+                <video id="video" autoplay playsinline></video>
+                <div class="scanning-grid"></div>
+                <div id="scanningOverlay" class="scanning-overlay hidden">
+                    <div class="mb-4 text-lg font-bold">Scan en cours...</div>
+                    <div class="text-white text-sm">Déplacez lentement autour de l'objet</div>
+                </div>
+            </div>
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="startScanBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium flex items-center">
+                    <span class="mr-2">&#9654;</span>Démarrer
+                </button>
+                <button id="stopScanBtn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-medium flex items-center hidden">
+                    <span class="mr-2">&#9632;</span>Arrêter
+                </button>
+                <button id="captureBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-full font-medium hidden">📸 Capturer</button>
+            </div>
+            <div id="photoCount" class="text-center mb-4 text-gray-600">0 / 10 photos</div>
+            <div class="text-center mb-4">
+                <button id="generateModelBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium hidden">Générer Modèle 3D</button>
+            </div>
+            <div id="scanHelp" class="text-center text-sm text-gray-600">Déplacez doucement autour de l'objet pour capturer des photos</div>
+        </div>
 
-```
-const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas
-```
+        <!-- Models Tab -->
+        <div id="models" class="tab-content p-4">
+            <div class="mb-4">
+                <h2 class="text-xl font-bold mb-3">Vos modèles</h2>
+                <div id="noModels" class="text-center py-10 text-gray-500">
+                    <p>Aucun modèle pour l'instant.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-
-## License: unknown
-https://github.com/jahknem/Translate2Anki/tree/0557b6a1db8056cdb2fd9db1c1979445b0a344de/.history/templates/index2_20230928001622.html
-
-```
-= document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height
-```
-
+    <script src="sw.js"></script>
+</body>
+</html>
