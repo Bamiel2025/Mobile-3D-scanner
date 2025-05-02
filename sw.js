@@ -1,21 +1,22 @@
-// Bouton générer le modèle
-generateModelBtn.addEventListener('click', () => {
-    if (capturedImages.length < MIN_PHOTOS) {
-        alert("Vous devez capturer au moins 10 photos avant de générer le modèle.");
-        return;
+async function sendImagesToServer(images) {
+    try {
+        const response = await fetch('http://localhost:5000/process-images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ images }) // Envoyer les images capturées
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de l’envoi des images au serveur');
+        }
+
+        const result = await response.json();
+        alert('Modèle 3D généré avec succès ! Téléchargez-le ici : ' + result.modelUrl);
+        return result;
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue lors de la génération du modèle 3D.');
     }
-
-    // Simuler le processus de génération de modèle
-    scanHelp.textContent = "Génération du modèle 3D en cours...";
-    generateModelBtn.disabled = true; // Désactiver le bouton pour éviter plusieurs clics
-
-    setTimeout(() => {
-        alert("Modèle 3D généré avec succès !");
-        // Réinitialiser l'application après génération
-        generateModelBtn.disabled = false;
-        generateModelBtn.classList.add('hidden');
-        scanHelp.textContent = "Déplacez lentement autour de l'objet";
-        capturedImages = [];
-        updatePhotoCount();
-    }, 3000); // Simuler un délai de 3 secondes
-});
+}
