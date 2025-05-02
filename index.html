@@ -240,6 +240,75 @@
                     });
             });
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('video');
+            const startScanBtn = document.getElementById('startScanBtn');
+            const stopScanBtn = document.getElementById('stopScanBtn');
+            const scanningOverlay = document.getElementById('scanningOverlay');
+            let stream = null;
+
+            // Fonction pour démarrer la caméra
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        } 
+                    });
+                    video.srcObject = stream;
+                    startScanBtn.disabled = false;
+                } catch (err) {
+                    console.error('Erreur accès caméra:', err);
+                    alert('Impossible d\'accéder à la caméra. Veuillez vérifier les permissions.');
+                }
+            }
+
+            // Fonction pour arrêter la caméra
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
+
+            // Gestion du bouton Start Scan
+            startScanBtn.addEventListener('click', () => {
+                startScanBtn.classList.add('hidden');
+                stopScanBtn.classList.remove('hidden');
+                scanningOverlay.classList.remove('hidden');
+                // Ici, ajoutez votre logique de scan
+            });
+
+            // Gestion du bouton Stop
+            stopScanBtn.addEventListener('click', () => {
+                startScanBtn.classList.remove('hidden');
+                stopScanBtn.classList.add('hidden');
+                scanningOverlay.classList.add('hidden');
+                // Ici, arrêtez votre logique de scan
+            });
+
+            // Gestion des onglets
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    
+                    tabBtns.forEach(b => b.classList.remove('text-indigo-600', 'border-indigo-600'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    btn.classList.add('text-indigo-600', 'border-indigo-600');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Démarrer la caméra au chargement
+            startCamera();
+        });
     </script>
 </body>
 </html>
