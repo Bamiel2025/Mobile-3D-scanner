@@ -62,10 +62,49 @@
                 <div id="noModels" class="text-center py-10 text-gray-500">
                     <p>Aucun modèle pour l'instant.</p>
                 </div>
+                <!-- Section de visualisation -->
+                <div id="viewer" style="width: 100%; height: 500px; margin-top: 20px;"></div>
             </div>
         </div>
     </div>
 
-    <script src="sw.js"></script> <!-- Script ajouté ici -->
+    <!-- Scripts -->
+    <script src="sw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/OBJLoader.js"></script>
+    <script>
+        /**
+         * Fonction pour charger et afficher un modèle 3D
+         * @param {string} modelUrl - URL du fichier du modèle 3D
+         */
+        function load3DModel(modelUrl) {
+            const viewer = document.getElementById('viewer');
+            viewer.innerHTML = ''; // Réinitialiser le contenu du viewer
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, viewer.offsetWidth / 500, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(viewer.offsetWidth, 500);
+            viewer.appendChild(renderer.domElement);
+
+            const loader = new THREE.OBJLoader();
+            loader.load(modelUrl, function (obj) {
+                scene.add(obj);
+                camera.position.z = 5;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    obj.rotation.y += 0.01; // Faire tourner le modèle
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }, undefined, function (error) {
+                console.error('Erreur lors du chargement du modèle :', error);
+            });
+        }
+
+        // Exemple d'appel : Charger un modèle 3D
+        // load3DModel('http://localhost:5000/output/model.obj'); // Remplacez par l'URL réelle
+    </script>
 </body>
 </html>
