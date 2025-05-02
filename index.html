@@ -74,7 +74,10 @@ const scanningOverlay = document.getElementById('scanningOverlay');
 // Fonction pour démarrer la caméra
 async function startCamera() {
     try {
-        if (!navigator.mediaDevices?.getUserMedia) throw new Error('getUserMedia non supporté');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Votre navigateur ne supporte pas l'accès à la caméra.");
+            return false;
+        }
         stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
         });
@@ -82,7 +85,7 @@ async function startCamera() {
         await video.play();
         return true;
     } catch (err) {
-        alert("Impossible d'accéder à la caméra : " + err.message);
+        alert("Impossible d'accéder à la caméra : " + (err.message || err));
         return false;
     }
 }
@@ -98,7 +101,9 @@ function stopCamera() {
 
 // Bouton démarrer scan
 startScanBtn.addEventListener('click', async () => {
+    startScanBtn.disabled = true;
     const ok = await startCamera();
+    startScanBtn.disabled = false;
     if (!ok) return;
     startScanBtn.classList.add('hidden');
     stopScanBtn.classList.remove('hidden');
