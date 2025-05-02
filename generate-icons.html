@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Icons</title>
+</head>
+<body>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    <br>
+    <button onclick="downloadIcons()">Télécharger les icônes</button>
+
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            const radius = size * 0.25;
+            
+            // Fond indigo
+            ctx.fillStyle = '#4f46e5';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.25);
+            ctx.fill();
+            
+            // Cercle extérieur
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = size * 0.08;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Point central
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size * 0.08, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function downloadIcons() {
+            const canvas192 = document.getElementById('canvas192');
+            const canvas512 = document.getElementById('canvas512');
+            
+            drawIcon(canvas192);
+            drawIcon(canvas512);
+            
+            // Télécharger 192x192
+            const link192 = document.createElement('a');
+            link192.download = 'icon-192x192.png';
+            link192.href = canvas192.toDataURL();
+            link192.click();
+            
+            // Télécharger 512x512
+            const link512 = document.createElement('a');
+            link512.download = 'icon-512x512.png';
+            link512.href = canvas512.toDataURL();
+            link512.click();
+        }
+
+        // Générer les icônes au chargement
+        window.onload = function() {
+            drawIcon(document.getElementById('canvas192'));
+            drawIcon(document.getElementById('canvas512'));
+        };
+    </script>
+</body>
+</html>
