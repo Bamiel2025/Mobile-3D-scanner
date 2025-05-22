@@ -69,7 +69,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="sw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/OBJLoader.js"></script>
     <script>
@@ -105,6 +104,228 @@
 
         // Exemple d'appel : Charger un modèle 3D
         // load3DModel('http://localhost:5000/output/model.obj'); // Remplacez par l'URL réelle
+    </script>
+    <script>
+// Constants and Variables
+const MIN_PHOTOS = 10;
+let capturedImages = [];
+let videoStream = null;
+
+// DOM Element References
+const videoEl = document.getElementById('video');
+const startScanBtn = document.getElementById('startScanBtn');
+const stopScanBtn = document.getElementById('stopScanBtn');
+const captureBtn = document.getElementById('captureBtn');
+const generateModelBtn = document.getElementById('generateModelBtn');
+const scanningOverlay = document.getElementById('scanningOverlay');
+const photoCountEl = document.getElementById('photoCount');
+const scanHelpEl = document.getElementById('scanHelp'); // Assuming scanHelp is the ID for the help text element
+
+// Tab elements
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+const scanTabBtn = document.querySelector('.tab-btn[data-tab="scan"]'); // Specific reference if needed
+const modelsTabBtn = document.querySelector('.tab-btn[data-tab="models"]'); // Specific reference if needed
+const scanTabContent = document.getElementById('scan');
+const modelsTabContent = document.getElementById('models');
+
+
+// Update Photo Count Function
+function updatePhotoCount() {
+    photoCountEl.textContent = `${capturedImages.length} / ${MIN_PHOTOS} photos`;
+}
+
+// Tab Switching Logic
+function switchTab(tabName) {
+    tabContents.forEach(content => {
+        if (content.id === tabName) {
+            content.classList.add('active');
+        } else {
+            content.classList.remove('active');
+        }
+    });
+    tabButtons.forEach(button => {
+        if (button.dataset.tab === tabName) {
+            button.classList.add('text-indigo-600', 'border-indigo-600');
+            button.classList.remove('text-gray-500');
+        } else {
+            button.classList.remove('text-indigo-600', 'border-indigo-600');
+            button.classList.add('text-gray-500');
+        }
+    });
+}
+
+// Camera Handling Functions
+async function startCamera() {
+    try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            videoEl.srcObject = videoStream;
+            videoEl.play(); // Ensure video plays
+
+            startScanBtn.classList.add('hidden');
+            stopScanBtn.classList.remove('hidden');
+            captureBtn.classList.remove('hidden');
+            scanningOverlay.classList.remove('hidden');
+            scanHelpEl.textContent = "Alignez l'objet dans la grille et capturez des photos sous différents angles.";
+            generateModelBtn.classList.add('hidden'); // Hide generate button until enough photos are taken
+        } else {
+            alert('getUserMedia n\'est pas supporté par ce navigateur.');
+            scanHelpEl.textContent = 'Erreur: getUserMedia n\'est pas supporté.';
+        }
+    } catch (error) {
+        console.error("Erreur lors du démarrage de la caméra: ", error);
+        alert("Impossible d'accéder à la caméra. Vérifiez les permissions et réessayez.");
+        scanHelpEl.textContent = "Erreur d'accès à la caméra. Vérifiez les permissions.";
+        // Ensure UI resets if camera fails to start
+        stopScanBtn.classList.add('hidden');
+        captureBtn.classList.add('hidden');
+        startScanBtn.classList.remove('hidden');
+        scanningOverlay.classList.add('hidden');
+    }
+}
+
+function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoEl.srcObject = null; // Clear video source
+    }
+    videoStream = null; // Reset videoStream variable
+
+    startScanBtn.classList.remove('hidden');
+    stopScanBtn.classList.add('hidden');
+    captureBtn.classList.add('hidden');
+    scanningOverlay.classList.add('hidden');
+    scanHelpEl.textContent = "Déplacez doucement autour de l'objet pour capturer des photos";
+    // Do not hide generateModelBtn if it was already visible
+    if (capturedImages.length < MIN_PHOTOS) {
+        generateModelBtn.classList.add('hidden');
+    }
+}
+
+// Image Capture Function
+function capturePhoto() {
+    if (!videoStream) {
+        alert("La caméra n'est pas active. Démarrez le scan d'abord.");
+        return;
+    }
+    if (capturedImages.length < MIN_PHOTOS) {
+        // Placeholder for actual image data - for now, just a string
+        const imagePlaceholder = `image_data_placeholder_${capturedImages.length + 1}`;
+        capturedImages.push(imagePlaceholder);
+        updatePhotoCount();
+        scanHelpEl.textContent = `Photo ${capturedImages.length} capturée! Continuez à capturer sous différents angles.`;
+
+        if (capturedImages.length >= MIN_PHOTOS) {
+            generateModelBtn.classList.remove('hidden');
+            scanHelpEl.textContent = `Nombre minimum de photos atteint (${MIN_PHOTOS}). Vous pouvez générer le modèle.`;
+            // Optionally disable capture button if MIN_PHOTOS is a hard limit
+            // captureBtn.classList.add('hidden'); 
+        }
+    } else {
+        // Alert if trying to capture more than MIN_PHOTOS, if it's a hard limit
+        // For now, we allow more, as the original code implies it might be a minimum
+        alert(`Vous avez déjà capturé le nombre minimum de ${MIN_PHOTOS} photos. Prêt à générer le modèle.`);
+    }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial UI setup
+    stopScanBtn.classList.add('hidden');
+    captureBtn.classList.add('hidden');
+    generateModelBtn.classList.add('hidden');
+    scanningOverlay.classList.add('hidden'); // Ensure overlay is hidden initially
+
+    updatePhotoCount(); // Initial call to set photo count text
+
+    // Set "Scanner" tab as active by default
+    switchTab('scan'); 
+
+    // Attach event listeners
+    startScanBtn.addEventListener('click', startCamera);
+    stopScanBtn.addEventListener('click', stopCamera);
+    captureBtn.addEventListener('click', capturePhoto);
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => switchTab(button.dataset.tab));
+    });
+
+    // Ensure the models tab initially shows "no models" message if it's empty
+    const modelsContainer = document.getElementById('viewer'); // Or a more specific container for models list
+    if (modelsTabContent.classList.contains('active') && (!modelsContainer || modelsContainer.children.length === 0)) {
+        document.getElementById('noModels').style.display = 'block';
+    } else if (modelsContainer && modelsContainer.children.length > 0) {
+         document.getElementById('noModels').style.display = 'none';
+    }
+});
+
+async function sendImagesToServer(images) {
+    try {
+        const response = await fetch('http://localhost:5000/process-images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ images }) // Envoyer les images capturées
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur lors de l’envoi des images au serveur');
+        }
+
+        const result = await response.json();
+
+        // Vérifiez si le modèle a été généré avec succès
+        if (result.modelUrl) {
+            alert('Modèle 3D généré avec succès ! Chargement du modèle...');
+            load3DModel(`http://localhost:5000${result.modelUrl}`); // Charger automatiquement le modèle
+        } else {
+            alert('Erreur : Le modèle n’a pas pu être généré.');
+        }
+
+        return result;
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue lors de la génération du modèle 3D.');
+    }
+}
+
+// Bouton générer le modèle
+generateModelBtn.addEventListener('click', async () => {
+    if (capturedImages.length < MIN_PHOTOS) {
+        alert("Vous devez capturer au moins 10 photos avant de générer le modèle.");
+        return;
+    }
+
+    scanHelpEl.textContent = "Envoi des images au serveur pour génération du modèle 3D...";
+    generateModelBtn.disabled = true;
+
+    const result = await sendImagesToServer(capturedImages);
+
+    generateModelBtn.disabled = false;
+    capturedImages = [];
+    updatePhotoCount();
+
+    if (result) {
+        scanHelpEl.textContent = "Modèle 3D chargé avec succès. Vous pouvez le visualiser ci-dessous.";
+    } else {
+        scanHelpEl.textContent = "Une erreur est survenue. Veuillez réessayer.";
+    }
+});
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+              console.error('Service Worker registration failed:', error);
+            });
+        });
+      }
     </script>
 </body>
 </html>
