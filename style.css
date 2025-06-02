@@ -1,0 +1,236 @@
+/* General body styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f4f4f4;
+    overflow: hidden; /* Prevent body scrollbars */
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100%; /* Ensure it fills the body */
+}
+
+/* Control Panel at the top */
+.control-panel {
+    background-color: #333;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10000; /* High z-index */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+.control-panel h1 {
+    margin: 0 0 10px 0;
+    font-size: 1.5em;
+}
+
+.search-container {
+    margin-bottom: 10px;
+}
+
+.search-container input[type="text"] {
+    padding: 8px;
+    width: 300px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.search-container button {
+    padding: 8px 15px;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.search-container button:hover {
+    background-color: #4cae4c;
+}
+
+.coordinates-display p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+/* Area for map comparison and info panel, side-by-side */
+.main-content-area {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden; 
+    height: 100%; /* Fill remaining space */
+}
+
+/* Map Comparison Area - takes up most of the space */
+.map-comparison-area {
+    flex-grow: 3; /* Takes more space compared to info-panel */
+    position: relative; /* For slider and overlay map positioning */
+    height: 100%;
+    overflow: hidden; /* Important for slider */
+    background-color: #add8e6; /* Light blue background for visibility */
+}
+
+/* Standard Map Container - Base Layer */
+#map-standard-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* Base map */
+}
+
+/* Geological Map Container - Overlay Layer */
+#map-geological-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%; /* Initially shows 50% of the map, JS will control this */
+    height: 100%;
+    overflow: hidden; /* This is key for the slider effect */
+    z-index: 10; /* Above standard map, below slider handle */
+    border-right: 2px solid #FF0000; /* Red draggable line for slider */
+    box-sizing: border-box; /* Include border in width */
+}
+
+
+.map { /* Class for the actual Leaflet map div */
+    width: 100%;
+    height: 100%;
+    background-color: #e0e0e0; /* Placeholder background */
+}
+
+.map-label {
+    position: absolute;
+    top: 10px;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    z-index: 500; /* Above map tiles but below main slider control */
+}
+#map-standard-container .map-label {
+    left: 10px;
+}
+#map-geological-container .map-label {
+    right: 10px; /* Position on the right for the part of geo map that's visible */
+}
+
+
+/* Slider Control Handle - this is the input range element */
+/* The visual "line" of the slider is now the right border of #map-geological-container */
+/* This input will be mostly transparent and just act as a handle area */
+.slider {
+    position: absolute;
+    top: 0;
+    left: 0; /* JS will position this based on #map-geological-container's width */
+    width: 30px; /* Width of the draggable area of the slider handle */
+    height: 100%; 
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent; /* Make track transparent */
+    outline: none;
+    cursor: ew-resize; /* East-West resize cursor for horizontal control */
+    z-index: 100; /* Highest, so it's draggable */
+    transform: translateX(-50%); /* Center the handle on the border */
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 30px; /* Same as track width for a larger grab area */
+    height: 30px; /* Height of the thumb */
+    background: rgba(76, 175, 80, 0.5); /* Semi-transparent green */
+    border-radius: 50%;
+    cursor: ew-resize;
+}
+
+.slider::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
+    background: rgba(76, 175, 80, 0.5);
+    border-radius: 50%;
+    cursor: ew-resize;
+    border: none;
+}
+
+
+/* Info Panel */
+.info-panel {
+    flex-grow: 1; /* Takes less space */
+    padding: 15px;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    height: 100%; /* Fill the main-content-area height */
+    z-index: 50;
+    box-sizing: border-box;
+}
+
+.info-panel h2 {
+    margin-top: 0;
+    font-size: 1.3em;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.info-panel h3 {
+    margin-top: 15px;
+    font-size: 1.1em;
+    color: #555;
+}
+
+#geological-legend img {
+    max-width: 100%;
+}
+
+#geological-details p,
+#fossil-details p {
+    font-size: 0.9em;
+    line-height: 1.6;
+    color: #444;
+}
+
+/* Leaflet specific overrides if needed */
+.leaflet-container {
+    height: 100%; /* Ensure leaflet maps fill their container */
+}
+.leaflet-top, .leaflet-bottom {
+    z-index: 400; /* Ensure leaflet controls are below map labels if necessary, and well below main slider */
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-content-area {
+        flex-direction: column; /* Stack map area and info panel vertically */
+    }
+    .map-comparison-area {
+        height: 60vh; /* Assign a portion of viewport height */
+        flex-grow: 0; /* Don't allow it to grow */
+        border-right: none;
+        border-bottom: 1px solid #ccc;
+    }
+    .info-panel {
+        height: auto; /* Let it take remaining space or define fixed */
+        min-height: 40vh; /* Minimum height */
+        flex-grow: 1;
+    }
+    .control-panel h1 {
+        font-size: 1.2em;
+    }
+    .search-container input[type="text"] {
+        width: calc(100% - 90px); /* Adjust width considering button */
+    }
+}

@@ -1,110 +1,68 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile 3D Scanner</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-    <style>
-        .camera-container { position: relative; width: 100%; height: 70vh; background: #000; overflow: hidden; }
-        #video { width: 100%; height: 100%; object-fit: cover; }
-        .scanning-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; background: rgba(0, 0, 0, 0.5); }
-        .scanning-grid { position: absolute; width: 80%; height: 60%; border: 2px dashed rgba(255, 255, 255, 0.7); top: 10%; left: 10%; pointer-events: none; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-    </style>
+    <title>Geological Mapping Application</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+    <!-- Basic favicon, replace later if a custom one is made -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗺️</text></svg>">
 </head>
-<body class="bg-gray-100">
-    <div class="max-w-md mx-auto bg-white min-h-screen">
-        <!-- Header -->
-        <header class="bg-indigo-600 text-white p-4 shadow-md flex items-center justify-between">
-            <h1 class="text-xl font-bold">3D Scanner</h1>
-        </header>
-        
-        <!-- Tabs -->
-        <div class="flex border-b">
-            <button class="tab-btn flex-1 py-3 font-medium text-indigo-600 border-b-2 border-indigo-600" data-tab="scan">Scanner</button>
-            <button class="tab-btn flex-1 py-3 font-medium text-gray-500" data-tab="models">Modèles</button>
+<body>
+    <div class="app-container">
+        <div class="control-panel">
+            <h1>Geological Map Viewer</h1>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search by location or GPS (lat,lon)">
+                <button id="search-button">Search</button>
+            </div>
+            <div class="coordinates-display">
+                <p>Map Center: <span id="map-center-coords">N/A</span></p>
+            </div>
         </div>
 
-        <!-- Scan Tab -->
-        <div id="scan" class="tab-content active p-4">
-            <div class="camera-container mb-4 rounded-lg overflow-hidden">
-                <video id="video" autoplay playsinline></video>
-                <div class="scanning-grid"></div>
-                <div id="scanningOverlay" class="scanning-overlay hidden">
-                    <div class="mb-4 text-lg font-bold">Scan en cours...</div>
-                    <div class="text-white text-sm">Déplacez lentement autour de l'objet</div>
-                </div>
+        <div class="map-comparison-area">
+            <div id="map-standard-container" class="map-container">
+                <div id="map-standard" class="map"></div>
+                <div class="map-label">Topographical Map</div>
             </div>
-            <div class="flex justify-center space-x-4 mb-6">
-                <button id="startScanBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium flex items-center">
-                    <span class="mr-2">&#9654;</span>Démarrer
-                </button>
-                <button id="stopScanBtn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-medium flex items-center hidden">
-                    <span class="mr-2">&#9632;</span>Arrêter
-                </button>
-                <button id="captureBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-full font-medium hidden">📸 Capturer</button>
+            
+            <div id="map-geological-container" class="map-container">
+                <div id="map-geological" class="map"></div>
+                <div class="map-label">Geological Map (BRGM)</div>
             </div>
-            <div id="photoCount" class="text-center mb-4 text-gray-600">0 / 10 photos</div>
-            <div class="text-center mb-4">
-                <button id="generateModelBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium hidden">Générer Modèle 3D</button>
-            </div>
-            <div id="scanHelp" class="text-center text-sm text-gray-600">Déplacez doucement autour de l'objet pour capturer des photos</div>
+
+            <input type="range" min="0" max="100" value="50" class="slider" id="map-slider">
         </div>
 
-        <!-- Models Tab -->
-        <div id="models" class="tab-content p-4">
-            <div class="mb-4">
-                <h2 class="text-xl font-bold mb-3">Vos modèles</h2>
-                <div id="noModels" class="text-center py-10 text-gray-500">
-                    <p>Aucun modèle pour l'instant.</p>
+        <div class="info-panel">
+            <h2>Geological Information</h2>
+            <div id="legend-container">
+                <h3>Legend</h3>
+                <!-- Legend will be populated here -->
+                <div id="geological-legend"></div>
+            </div>
+            <div id="details-container">
+                <h3>Details at Point</h3>
+                <div id="geological-details">
+                    <p>Click on the geological map to see details.</p>
                 </div>
-                <!-- Section de visualisation -->
-                <div id="viewer" style="width: 100%; height: 500px; margin-top: 20px;"></div>
+            </div>
+            <div id="fossil-info-container">
+                <h3>Fossil Information</h3>
+                <div id="fossil-details">
+                    <p>Associated fossil data will appear here.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="sw.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/OBJLoader.js"></script>
-    <script>
-        /**
-         * Fonction pour charger et afficher un modèle 3D
-         * @param {string} modelUrl - URL du fichier du modèle 3D
-         */
-        function load3DModel(modelUrl) {
-            const viewer = document.getElementById('viewer');
-            viewer.innerHTML = ''; // Réinitialiser le contenu du viewer
-
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, viewer.offsetWidth / 500, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer();
-            renderer.setSize(viewer.offsetWidth, 500);
-            viewer.appendChild(renderer.domElement);
-
-            const loader = new THREE.OBJLoader();
-            loader.load(modelUrl, function (obj) {
-                scene.add(obj);
-                camera.position.z = 5;
-
-                function animate() {
-                    requestAnimationFrame(animate);
-                    obj.rotation.y += 0.01; // Faire tourner le modèle
-                    renderer.render(scene, camera);
-                }
-                animate();
-            }, undefined, function (error) {
-                console.error('Erreur lors du chargement du modèle :', error);
-            });
-        }
-
-        // Exemple d'appel : Charger un modèle 3D
-        // load3DModel('http://localhost:5000/output/model.obj'); // Remplacez par l'URL réelle
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <script src="script.js"></script>
 </body>
 </html>
